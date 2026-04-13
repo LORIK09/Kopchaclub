@@ -1,0 +1,67 @@
+// prisma/schema.prisma
+
+// This is the schema for the KopchaClub application using Prisma ORM
+
+generator client { 
+  provider = "prisma-client-js" 
+}
+
+datasource db { 
+  provider = "postgresql" 
+  url      = env("DATABASE_URL") 
+}
+
+model User { 
+  id        Int      @id @default(autoincrement())
+  username  String   @unique 
+  email     String   @unique 
+  password  String
+  posts     Post[]   @relation("UserPosts")
+  likes     Like[]   @relation("UserLikes")
+  follows    Follow[]  @relation("UserFollows")
+  followers  Follow[]  @relation("UserFollowers")
+  comments   Comment[] @relation("UserComments")
+  admin      Boolean  @default(false)
+}
+
+model Post { 
+  id          Int      @id @default(autoincrement())
+  title       String 
+  content     String 
+  published    Boolean  @default(false)
+  authorId    Int      
+  author      User     @relation("UserPosts", fields: [authorId], references: [id])
+  likes       Like[]     @relation("PostLikes")
+  comments    Comment[] @relation("PostComments")
+}
+
+model Like { 
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  postId      Int
+  user        User  @relation("UserLikes", fields: [userId], references: [id])
+  post        Post  @relation("PostLikes", fields: [postId], references: [id])
+}
+
+model Follow { 
+  id          Int      @id @default(autoincrement())
+  followerId  Int 
+  followingId Int 
+  follower    User @relation("UserFollows", fields: [followerId], references: [id])
+  following   User @relation("UserFollowers", fields: [followingId], references: [id])
+}
+
+model Comment { 
+  id        Int     @id @default(autoincrement())
+  content   String 
+  userId    Int
+  postId    Int
+  user      User  @relation("UserComments", fields: [userId], references: [id])
+  post      Post  @relation("PostComments", fields: [postId], references: [id])
+}
+
+model AdminWhitelist { 
+  id        Int     @id @default(autoincrement())
+  userId    Int   @unique
+  user      User   @relation(fields: [userId], references: [id])
+}
